@@ -11,37 +11,75 @@
 #include <util/delay.h>
 
 
+#include "Buzzer.h"
 
-#define BUZZER_PIN  PB2 //puerto al que está el BUZZER
+// Función para activar/desactivar el buzzer
 
-#define PRESCALER   8    // Prescaler para el temporizador (64 prescale)
+#define BUZZER_PIN PB2
+#define BUZZER_ON() (PORTB |= (1 << BUZZER_PIN))
+#define BUZZER_OFF() (PORTB &= ~(1 << BUZZER_PIN))
+#define TOGGLE_BUZZER() (PORTB ^= (1 << BUZZER_PIN))
 
-void init_buzzer() {
-	// Configura el pin del buzzer como salida
-	DDRB |= (1 << BUZZER_PIN);
+// Función para reproducir un tono utilizando playSound_noTMR
+static void inline playTone(uint16_t frequency, uint16_t duration_ms) {
+	uint16_t period_us = F_CPU / frequency; // Calcula el período del tono en microsegundos
 
-	// Configura el modo de temporizador 0 (Timer0) para PWM
-	TCCR0A |= (1 << WGM00) | (1 << WGM01); // Modo PWM rápido
-	TCCR0A |= (1 << COM0A0); // Clear OC0A on Compare Match
-	TCCR0B |= (1 << CS01); // Configura el prescaler a 8
+	for (uint16_t i = 0; i < duration_ms * F_CPU / period_us; i++) {
+		BUZZER_ON(); // Activa el buzzer
+		_delay_us(period_us / 2); // Espera la mitad del período
+		BUZZER_OFF(); // Desactiva el buzzer
+		_delay_us(period_us / 2); // Espera la otra mitad del período
+	}
 }
 
-void playSound(uint8_t periodo_ms){
-	// Calcula el valor de comparación necesario para el período deseado
-	// (Formula: valor = (F_CPU / (prescaler * frequency)) - 1)
-	uint8_t valor_comparacion = (F_CPU / (PRESCALER * periodo_ms * 1000UL)) - 1;
-
-	// Establece el valor de comparación
-	OCR0A = valor_comparacion;
+// Función principal para reproducir la melodía
+static void inline playMelody() {
+	// Reproduce una secuencia de notas
+	playTone(10, 200); // La
+	_delay_ms(50);
+	playTone(12, 200); // Si
+	_delay_ms(50);
+	playTone(14, 200); // Do#
+	_delay_ms(50);
+	playTone(16, 200); // Re#
+	_delay_ms(50);
+	playTone(1800, 200); // Mi#
+	_delay_ms(50);
+	playTone(2000, 200); // Fa#
+	_delay_ms(50);
+	playTone(2200, 200); // Sol#
+	_delay_ms(50);
+	playTone(2400, 200); // La#
+	_delay_ms(50);
+	playTone(2600, 200); // Do
+	_delay_ms(50);
+	playTone(2800, 200); // Re
+	_delay_ms(50);
+	playTone(3000, 200); // Mi
+	_delay_ms(50);
+	playTone(3200, 200); // Fa
+	_delay_ms(50);
+	playTone(3400, 200); // Sol
+	_delay_ms(50);
+	playTone(3600, 200); // La
+	_delay_ms(50);
+	playTone(3800, 200); // Si
+	_delay_ms(50);
 }
 
 
-int main(void) {
+
+int main(void) {	
+	
 	init_buzzer();
-
+	
+	uint16_t tone=1;
 	while (1){
-		//_delay_ms(1000);
-		playSound(500);
+	
+	playTone(tone,100);
+	_delay_ms(1000);
+	tone=(tone +1)% 255;
+		
 	}
 	
 
